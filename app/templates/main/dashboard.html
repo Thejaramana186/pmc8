@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - PI Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">Dashboard</h1>
+                    <p class="text-muted mb-0">Welcome back, {{ current_user.first_name }} {{ current_user.last_name }}</p>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="input-group me-3" style="width: 300px;">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0" placeholder="Search projects..." data-search=".project-card">
+                    </div>
+                </div>
+            </div>
+            <div class="text-end">
+                <small class="text-muted">{{ 'Principal Investigator' if current_user.is_pi() else 'Team Member' }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 rounded-3 p-3 me-3">
+                            <i class="fas fa-project-diagram text-primary fa-lg"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Active Projects</h6>
+                            <h3 class="mb-0 fw-bold">{{ stats.active_projects }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-success bg-opacity-10 rounded-3 p-3 me-3">
+                            <i class="fas fa-rupee-sign text-success fa-lg"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Total Funding</h6>
+                            <h3 class="mb-0 fw-bold">₹{{ "{:,.0f}".format(stats.total_funding) }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-warning bg-opacity-10 rounded-3 p-3 me-3">
+                            <i class="fas fa-tasks text-warning fa-lg"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Tasks Due Soon</h6>
+                            <h3 class="mb-0 fw-bold">{{ pending_tasks|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-info bg-opacity-10 rounded-3 p-3 me-3">
+                            <i class="fas fa-users text-info fa-lg"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Team Members</h6>
+                            <h3 class="mb-0 fw-bold">
+                                {% set total_members = [] %}
+                                {% for project in projects %}
+                                    {% for member in project.team_members %}
+                                        {% if member not in total_members %}
+                                            {% set _ = total_members.append(member) %}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endfor %}
+                                {{ total_members|length }}
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Projects -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold">Recent Projects</h5>
+                        {% if current_user.is_pi() %}
+                            <a href="{{ url_for('projects.create_project') }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus me-1"></i>New Project
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if projects %}
+                        {% for project in projects[:5] %}
+                            <div class="project-card border-bottom p-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <h6 class="mb-0 me-2">
+                                                <a href="{{ url_for('projects.view_project', id=project.id) }}" class="text-decoration-none text-dark fw-bold">
+                                                    {{ project.title }}
+                                                </a>
+                                            </h6>
+                                            <span class="badge bg-{{ project.get_status_color() }} rounded-pill">{{ project.status.replace('_', ' ').title() }}</span>
+                                        </div>
+                                        <p class="text-muted mb-2 small">{{ project.project_id }}</p>
+                                        <p class="text-muted mb-2">{{ project.description[:100] }}{% if project.description|length > 100 %}...{% endif %}</p>
+                                        <div class="d-flex align-items-center text-muted small">
+                                            <span class="me-3">
+                                                <i class="fas fa-calendar me-1"></i>
+                                                {{ project.start_date.strftime('%b %d') }} - {{ project.end_date.strftime('%b %d, %Y') }}
+                                            </span>
+                                            <span class="me-3">
+                                                <i class="fas fa-users me-1"></i>
+                                                {{ project.team_members|length + 1 }} members
+                                            </span>
+                                            {% if project.funding_amount %}
+                                            <span>
+                                                <i class="fas fa-rupee-sign me-1"></i>
+                                                ₹{{ "{:,.0f}".format(project.funding_amount) }}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="text-end ms-3">
+                                        <div class="mb-2">
+                                            <small class="text-muted">Progress</small>
+                                            <div class="fw-bold">{{ project.get_progress_percentage() }}%</div>
+                                        </div>
+                                        <div class="progress" style="width: 80px; height: 6px;">
+                                            <div class="progress-bar bg-success" style="width: {{ project.get_progress_percentage() }}%; height: 8px;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-project-diagram fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No projects found</h5>
+                            <p class="text-muted">Get started by creating your first project.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Upcoming Meetings -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0 py-3">
+                    <h6 class="mb-0 fw-bold">
+                        <i class="fas fa-calendar text-primary me-2"></i>Upcoming Meetings
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    {% if upcoming_meetings %}
+                        {% for meeting in upcoming_meetings %}
+                            <div class="border-bottom p-3">
+                                <div class="d-flex align-items-start">
+                                    <div class="bg-primary bg-opacity-10 rounded p-2 me-3">
+                                        <i class="fas fa-video text-primary"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">
+                                            <a href="{{ url_for('meetings.view_meeting', id=meeting.id) }}" class="text-decoration-none text-dark">
+                                                {{ meeting.title }}
+                                            </a>
+                                        </h6>
+                                        <p class="text-muted small mb-1">{{ meeting.project.title }}</p>
+                                        <div class="d-flex align-items-center text-muted small">
+                                            <i class="fas fa-clock me-1"></i>
+                                            {{ meeting.meeting_date.strftime('%b %d, %I:%M %p') }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-calendar-times fa-2x text-muted mb-2"></i>
+                            <p class="text-muted small mb-0">No upcoming meetings</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Tasks -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <h6 class="mb-0 fw-bold">
+                        <i class="fas fa-tasks text-warning me-2"></i>Recent Tasks
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    {% if pending_tasks %}
+                        {% for task in pending_tasks[:5] %}
+                            <div class="border-bottom p-3">
+                                <div class="d-flex align-items-start">
+                                    <div class="bg-warning bg-opacity-10 rounded p-2 me-3">
+                                        <i class="fas fa-check-circle text-warning"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">
+                                            <a href="{{ url_for('tasks.view_task', id=task.id) }}" class="text-decoration-none text-dark">
+                                                {{ task.title }}
+                                            </a>
+                                        </h6>
+                                        <p class="text-muted small mb-1">{{ task.project.title }}</p>
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <span class="badge bg-{{ task.get_status_color() }} rounded-pill small">{{ task.status.replace('_', ' ').title() }}</span>
+                                            {% if task.due_date %}
+                                                <small class="text-muted">Due: {{ task.due_date.strftime('%b %d') }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-tasks fa-2x text-muted mb-2"></i>
+                            <p class="text-muted small mb-0">No pending tasks</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

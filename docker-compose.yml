@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=your-production-secret-key-change-this-in-production
+      - DATABASE_URL=sqlite:///data/pi_management.db
+      # Email configuration (uncomment and configure as needed)
+      # - MAIL_SERVER=smtp.gmail.com
+      # - MAIL_PORT=587
+      # - MAIL_USE_TLS=true
+      # - MAIL_USE_SSL=false
+      # - MAIL_USERNAME=your-email@gmail.com
+      # - MAIL_PASSWORD=your-app-password
+      # - MAIL_DEFAULT_SENDER=your-email@gmail.com
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Optional: PostgreSQL database
+  # db:
+  #   image: postgres:15
+  #   environment:
+  #     POSTGRES_DB: pi_management
+  #     POSTGRES_USER: pi_user
+  #     POSTGRES_PASSWORD: your-db-password
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+
+# volumes:
+#   postgres_data:

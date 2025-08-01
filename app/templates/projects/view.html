@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.title }} - PI Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <div class="d-flex align-items-center mb-2">
+                    <h1 class="me-3">{{ project.title }}</h1>
+                    <span class="badge bg-{{ project.get_status_color() }} rounded-pill">{{ project.status.replace('_', ' ').title() }}</span>
+                </div>
+                <p class="text-muted mb-0">{{ project.project_id }}</p>
+            </div>
+            {% if current_user.is_pi() and project.pi_id == current_user.id %}
+                <div>
+                    <a href="{{ url_for('projects.edit_project', id=project.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-1"></i>Edit Project
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Project Overview Cards -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <i class="fas fa-calendar text-primary fa-lg"></i>
+                </div>
+                <h6 class="text-muted mb-1">Timeline</h6>
+                <p class="mb-0 fw-bold">{{ project.start_date.strftime('%b %d, %Y') }}</p>
+                <p class="mb-0 fw-bold">{{ project.end_date.strftime('%b %d, %Y') }}</p>
+            </div>
+        </div>
+    </div>
+    
+    {% if current_user.is_pi() and project.funding_amount %}
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <i class="fas fa-rupee-sign text-success fa-lg"></i>
+                </div>
+                <h6 class="text-muted mb-1">Funding</h6>
+                <p class="mb-0 fw-bold">₹{{ "{:,.0f}".format(project.funding_amount) }}</p>
+                <small class="text-muted">{{ project.funding_source or 'Not specified' }}</small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <i class="fas fa-chart-line text-info fa-lg"></i>
+                </div>
+                <h6 class="text-muted mb-1">Progress</h6>
+                <p class="mb-0 fw-bold">{{ project.get_progress_percentage() }}% Complete</p>
+                <div class="progress mt-2" style="height: 6px;">
+                    <div class="progress-bar bg-info" style="width: {{ project.get_progress_percentage() }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                    <i class="fas fa-users text-warning fa-lg"></i>
+                </div>
+                <h6 class="text-muted mb-1">Team Members</h6>
+                <p class="mb-0 fw-bold">{{ project.team_members|length + 1 }}</p>
+                <small class="text-muted">Active members</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Project Details -->
+    <div class="col-lg-8">
+        <!-- Description -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="mb-0 fw-bold">Description</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ project.description or 'No description available.' }}</p>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="mb-0 fw-bold">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    {% if current_user.is_pi() or current_user in project.team_members %}
+                        <a href="{{ url_for('tasks.create_task', project_id=project.id) }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Create Task
+                        </a>
+                    {% endif %}
+                    {% if current_user.is_pi() and project.pi_id == current_user.id %}
+                        <a href="{{ url_for('meetings.create_meeting', project_id=project.id) }}" class="btn btn-success">
+                            <i class="fas fa-calendar-plus me-1"></i>Schedule Meeting
+                        </a>
+                        <a href="{{ url_for('projects.edit_project', id=project.id) }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-users me-1"></i>Manage Team
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tasks -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">Tasks</h5>
+                {% if current_user.is_pi() or current_user in project.team_members %}
+                    <a href="{{ url_for('tasks.create_task', project_id=project.id) }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-plus me-1"></i>Add Task
+                    </a>
+                {% endif %}
+            </div>
+            <div class="card-body p-0">
+                {% if project.tasks %}
+                    {% for task in project.tasks %}
+                        <div class="border-bottom p-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <h6 class="mb-0 me-2">
+                                            <a href="{{ url_for('tasks.view_task', id=task.id) }}" class="text-decoration-none text-dark">
+                                                {{ task.title }}
+                                            </a>
+                                        </h6>
+                                        <span class="badge bg-{{ task.get_status_color() }} rounded-pill me-1">{{ task.status.replace('_', ' ').title() }}</span>
+                                        <span class="badge bg-{{ task.get_priority_color() }} rounded-pill">{{ task.priority.title() }}</span>
+                                    </div>
+                                    <div class="d-flex align-items-center text-muted small">
+                                        <span class="me-3">
+                                            <i class="fas fa-user me-1"></i>
+                                            {{ task.assignee.get_full_name() if task.assignee else 'Unassigned' }}
+                                        </span>
+                                        {% if task.due_date %}
+                                        <span>
+                                            <i class="fas fa-calendar me-1"></i>
+                                            Due: {{ task.due_date.strftime('%b %d, %Y') }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">No tasks created yet</h6>
+                        <p class="text-muted small">Create your first task to get started</p>
+                        {% if current_user.is_pi() or current_user in project.team_members %}
+                            <a href="{{ url_for('tasks.create_task', project_id=project.id) }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus me-1"></i>Create first task
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Meetings -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">Meetings</h5>
+                {% if current_user.is_pi() and project.pi_id == current_user.id %}
+                    <a href="{{ url_for('meetings.create_meeting', project_id=project.id) }}" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-plus me-1"></i>Schedule Meeting
+                    </a>
+                {% endif %}
+            </div>
+            <div class="card-body p-0">
+                {% if project.meetings %}
+                    {% for meeting in project.meetings %}
+                        <div class="border-bottom p-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <h6 class="mb-0 me-2">
+                                            <a href="{{ url_for('meetings.view_meeting', id=meeting.id) }}" class="text-decoration-none text-dark">
+                                                {{ meeting.title }}
+                                            </a>
+                                        </h6>
+                                        <span class="badge bg-{{ meeting.get_status_color() }} rounded-pill">{{ meeting.status.title() }}</span>
+                                    </div>
+                                    <div class="d-flex align-items-center text-muted small">
+                                        <span class="me-3">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            {{ meeting.meeting_date.strftime('%B %d, %Y at %I:%M %p') }}
+                                        </span>
+                                        <span>
+                                            <i class="fas fa-users me-1"></i>
+                                            {{ meeting.attendees|length }} attendees
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-calendar fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">No meetings scheduled yet</h6>
+                        <p class="text-muted small">Schedule your first meeting to get started</p>
+                        {% if current_user.is_pi() and project.pi_id == current_user.id %}
+                            <a href="{{ url_for('meetings.create_meeting', project_id=project.id) }}" class="btn btn-success btn-sm">
+                                <i class="fas fa-plus me-1"></i>Schedule first meeting
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Team Members Sidebar -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">Team Members</h5>
+                {% if current_user.is_pi() and project.pi_id == current_user.id %}
+                    <a href="{{ url_for('projects.edit_project', id=project.id) }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-user-plus me-1"></i>Manage
+                    </a>
+                {% endif %}
+            </div>
+            <div class="card-body p-0">
+                {% if project.team_members %}
+                    {% for member in project.team_members %}
+                        <div class="border-bottom p-3">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <span class="text-white fw-bold small">{{ member.first_name[0] }}{{ member.last_name[0] }}</span>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0">{{ member.get_full_name() }}</h6>
+                                    <small class="text-muted">{{ member.email }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">No team members assigned yet</h6>
+                        <p class="text-muted small">Add team members to collaborate</p>
+                        {% if current_user.is_pi() and project.pi_id == current_user.id %}
+                            <a href="{{ url_for('projects.edit_project', id=project.id) }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-user-plus me-1"></i>Add team members
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

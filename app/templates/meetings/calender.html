@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Calendar - PI Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="fas fa-calendar me-2"></i>Meeting Calendar</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        {% if meetings %}
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Meeting</th>
+                                    <th>Project</th>
+                                    <th>Date & Time</th>
+                                    <th>Duration</th>
+                                    <th>Status</th>
+                                    <th>Attendees</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for meeting in meetings %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ meeting.title }}</strong>
+                                        {% if meeting.agenda %}
+                                        <br><small class="text-muted">{{ meeting.agenda[:50] }}{% if meeting.agenda|length > 50 %}...{% endif %}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('projects.view_project', id=meeting.project.id) }}" class="text-decoration-none">
+                                            {{ meeting.project.title }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        {{ meeting.meeting_date.strftime('%b %d, %Y') }}<br>
+                                        <small class="text-muted">{{ meeting.meeting_date.strftime('%I:%M %p') }}</small>
+                                    </td>
+                                    <td>{{ meeting.duration_minutes }} min</td>
+                                    <td>
+                                        <span class="badge bg-{{ meeting.get_status_color() }}">
+                                            {{ meeting.status.title() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ meeting.attendees|length }} attendees</small>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('meetings.view_meeting', id=meeting.id) }}" class="btn btn-sm btn-outline-primary">
+                                            View
+                                        </a>
+                                        {% if meeting.created_by_id == current_user.id %}
+                                        <a href="{{ url_for('meetings.edit_meeting', id=meeting.id) }}" class="btn btn-sm btn-outline-secondary">
+                                            Edit
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-calendar fa-4x text-muted mb-3"></i>
+                <h3 class="text-muted">No Meetings Scheduled</h3>
+                <p class="text-muted">
+                    {% if current_user.is_pi() %}
+                        Schedule meetings in your projects to get started.
+                    {% else %}
+                        You haven't been invited to any meetings yet.
+                    {% endif %}
+                </p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

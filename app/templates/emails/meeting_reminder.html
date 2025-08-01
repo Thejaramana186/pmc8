@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Meeting Reminder</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #ffc107;">Meeting Reminder</h2>
+        
+        <p>Dear Team Member,</p>
+        
+        <p>This is a reminder that you have a meeting scheduled for tomorrow.</p>
+        
+        <div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #ffc107;">
+            <h3 style="margin-top: 0; color: #856404;">Meeting Details</h3>
+            <p><strong>Title:</strong> {{ meeting.title }}</p>
+            <p><strong>Project:</strong> {{ meeting.project.title }}</p>
+            <p><strong>Date & Time:</strong> {{ meeting.meeting_date.strftime('%B %d, %Y at %I:%M %p') }}</p>
+            <p><strong>Duration:</strong> {{ meeting.duration_minutes }} minutes</p>
+            {% if meeting.location %}
+            <p><strong>Location:</strong> {{ meeting.location }}</p>
+            {% endif %}
+            {% if meeting.meeting_link %}
+            <p><strong>Meeting Link:</strong> <a href="{{ meeting.meeting_link }}">{{ meeting.meeting_link }}</a></p>
+            {% endif %}
+        </div>
+        
+        <p>Please ensure you have everything ready for the meeting.</p>
+        
+        <p>Best regards,<br>
+        {{ meeting.creator.get_full_name() }}<br>
+        Principal Investigator<br>
+        PI Management System</p>
+    </div>
+</body>
+</html>

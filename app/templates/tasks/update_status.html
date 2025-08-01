@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Update Task Status - PI Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="fas fa-edit me-2"></i>Update Task Status</h1>
+        <p class="text-muted">Task: <strong>{{ task.title }}</strong></p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.status.label(class="form-label") }}
+                        {{ form.status(class="form-select") }}
+                        {% for error in form.status.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.comment.label(class="form-label") }}
+                        {{ form.comment(class="form-control", rows="4", placeholder="Optional: Add a comment about this status update...") }}
+                        {% for error in form.comment.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('tasks.view_task', id=task.id) }}" class="btn btn-secondary">Cancel</a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Current Task Info</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Current Status:</strong> <span class="badge bg-{{ task.get_status_color() }}">{{ task.status.replace('_', ' ').title() }}</span></p>
+                <p><strong>Priority:</strong> <span class="badge bg-{{ task.get_priority_color() }}">{{ task.priority.title() }}</span></p>
+                <p><strong>Assigned To:</strong> {{ task.assignee.get_full_name() if task.assignee else 'Unassigned' }}</p>
+                {% if task.due_date %}
+                <p><strong>Due Date:</strong> {{ task.due_date.strftime('%B %d, %Y') }}</p>
+                {% endif %}
+                <p><strong>Project:</strong> {{ task.project.title }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

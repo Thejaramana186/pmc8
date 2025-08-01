@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Meeting Invitation</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #007bff;">Meeting Invitation</h2>
+        
+        <p>Dear Team Member,</p>
+        
+        <p>You have been invited to a meeting for the project <strong>{{ meeting.project.title }}</strong> by <strong>{{ meeting.creator.get_full_name() }}</strong> (Principal Investigator).</p>
+        
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h3 style="margin-top: 0; color: #495057;">Meeting Details</h3>
+            <p><strong>Title:</strong> {{ meeting.title }}</p>
+            <p><strong>Date & Time:</strong> {{ meeting.meeting_date.strftime('%B %d, %Y at %I:%M %p') }}</p>
+            <p><strong>Duration:</strong> {{ meeting.duration_minutes }} minutes</p>
+            <p><strong>Organized by:</strong> {{ meeting.creator.get_full_name() }} (PI)</p>
+            {% if meeting.location %}
+            <p><strong>Location:</strong> {{ meeting.location }}</p>
+            {% endif %}
+            {% if meeting.meeting_link %}
+            <p><strong>Meeting Link:</strong> <a href="{{ meeting.meeting_link }}">{{ meeting.meeting_link }}</a></p>
+            {% endif %}
+            {% if meeting.agenda %}
+            <p><strong>Agenda:</strong></p>
+            <p>{{ meeting.agenda }}</p>
+            {% endif %}
+        </div>
+        
+        <p>Please mark your calendar and join us for this important meeting.</p>
+        
+        <p>Best regards,<br>
+        <strong>{{ meeting.creator.get_full_name() }}</strong><br>
+        Principal Investigator<br>
+        {{ meeting.project.title }}<br>
+        PI Management System</p>
+        
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
+        <p style="font-size: 12px; color: #666;">
+            This email was sent from the PI Management System. Please do not reply to this email.
+        </p>
+    </div>
+</body>
+</html>

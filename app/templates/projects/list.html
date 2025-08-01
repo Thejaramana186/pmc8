@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Projects - PI Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-project-diagram me-2"></i>Projects</h1>
+            {% if current_user.is_pi() %}
+                <a href="{{ url_for('projects.create_project') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>New Project
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    {% if projects %}
+        {% for project in projects %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span class="badge bg-{{ project.get_status_color() }}">{{ project.status.replace('_', ' ').title() }}</span>
+                        <small class="text-muted">{{ project.project_id }}</small>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ project.title }}</h5>
+                        <p class="card-text text-muted">{{ project.description[:100] }}{% if project.description|length > 100 %}...{% endif %}</p>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="text-muted">Progress</small>
+                                <small class="text-muted">{{ project.get_progress_percentage() }}%</small>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" style="width: {{ project.get_progress_percentage() }}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="row text-center">
+                            <div class="col">
+                                <small class="text-muted d-block">Start Date</small>
+                                <strong>{{ project.start_date.strftime('%b %d, %Y') }}</strong>
+                            </div>
+                            <div class="col">
+                                <small class="text-muted d-block">End Date</small>
+                                <strong>{{ project.end_date.strftime('%b %d, %Y') }}</strong>
+                            </div>
+                            {% if current_user.is_pi() and project.funding_amount %}
+                            <div class="col">
+                                <small class="text-muted d-block">Funding</small>
+                                <strong>${{ "{:,.0f}".format(project.funding_amount) }}</strong>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="fas fa-users me-1"></i>{{ project.team_members|length + 1 }} members
+                            </small>
+                            <div>
+                                <a href="{{ url_for('projects.view_project', id=project.id) }}" class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+                                {% if current_user.is_pi() and project.pi_id == current_user.id %}
+                                    <a href="{{ url_for('projects.edit_project', id=project.id) }}" class="btn btn-sm btn-outline-secondary">
+                                        Edit
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-project-diagram fa-4x text-muted mb-3"></i>
+                <h3 class="text-muted">No Projects Found</h3>
+                <p class="text-muted">Get started by creating your first project.</p>
+                {% if current_user.is_pi() %}
+                    <a href="{{ url_for('projects.create_project') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Create Project
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

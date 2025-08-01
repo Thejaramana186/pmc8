@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Schedule Meeting - PI Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="fas fa-plus me-2"></i>Schedule New Meeting</h1>
+        <p class="text-muted">Project: <strong>{{ project.title }}</strong></p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.title.label(class="form-label") }}
+                        {{ form.title(class="form-control") }}
+                        {% for error in form.title.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.agenda.label(class="form-label") }}
+                        {{ form.agenda(class="form-control", rows="4") }}
+                        {% for error in form.agenda.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            {{ form.meeting_date.label(class="form-label") }}
+                            {{ form.meeting_date(class="form-control") }}
+                            {% for error in form.meeting_date.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            {{ form.duration_minutes.label(class="form-label") }}
+                            {{ form.duration_minutes(class="form-control") }}
+                            {% for error in form.duration_minutes.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.location.label(class="form-label") }}
+                            {{ form.location(class="form-control") }}
+                            {% for error in form.location.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.meeting_link.label(class="form-label") }}
+                            {{ form.meeting_link(class="form-control") }}
+                            {% for error in form.meeting_link.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.attendees.label(class="form-label") }}
+                        {% if not form.attendees.choices %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                No team members available. Please add team members to the project first.
+                            </div>
+                        {% endif %}
+                        {{ form.attendees(class="form-select", multiple=True, size="5") }}
+                        <div class="form-text">Hold Ctrl (Cmd on Mac) to select multiple attendees</div>
+                        {% for error in form.attendees.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('projects.view_project', id=project.id) }}" class="btn btn-secondary">Cancel</a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}{{ meeting.title }} - PI Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1>{{ meeting.title }}</h1>
+                <p class="text-muted mb-0">
+                    Project: <a href="{{ url_for('projects.view_project', id=meeting.project.id) }}" class="text-decoration-none">{{ meeting.project.title }}</a>
+                    • <span class="badge bg-{{ meeting.get_status_color() }}">{{ meeting.status.title() }}</span>
+                </p>
+            </div>
+            {% if meeting.created_by_id == current_user.id %}
+                <div>
+                    <a href="{{ url_for('meetings.edit_meeting', id=meeting.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-1"></i>Edit Meeting
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Meeting Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Date & Time</h6>
+                        <p>{{ meeting.meeting_date.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Duration</h6>
+                        <p>{{ meeting.duration_minutes }} minutes</p>
+                    </div>
+                </div>
+                
+                {% if meeting.location %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Location</h6>
+                        <p>{{ meeting.location }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if meeting.meeting_link %}
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Meeting Link</h6>
+                        <p><a href="{{ meeting.meeting_link }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-external-link-alt me-1"></i>Join Meeting
+                        </a></p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if meeting.agenda %}
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Agenda</h6>
+                        <p>{{ meeting.agenda }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Organized By</h6>
+                        <p>{{ meeting.creator.get_full_name() }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Created</h6>
+                        <p>{{ meeting.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-users me-2"></i>Attendees</h5>
+            </div>
+            <div class="card-body">
+                {% if meeting.attendees %}
+                    {% for attendee in meeting.attendees %}
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="me-3">
+                                <i class="fas fa-user fa-lg text-secondary"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">{{ attendee.get_full_name() }}</h6>
+                                <small class="text-muted">{{ attendee.email }}</small>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No attendees selected.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

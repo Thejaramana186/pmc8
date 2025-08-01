@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - PI Management System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="fas fa-user me-2"></i>User Profile</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Profile Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">First Name</label>
+                        <p class="form-control-plaintext">{{ current_user.first_name }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Last Name</label>
+                        <p class="form-control-plaintext">{{ current_user.last_name }}</p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Username</label>
+                        <p class="form-control-plaintext">{{ current_user.username }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Email</label>
+                        <p class="form-control-plaintext">{{ current_user.email }}</p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Role</label>
+                        <p class="form-control-plaintext">
+                            {% if current_user.is_pi() %}
+                                <span class="badge bg-warning">Principal Investigator</span>
+                            {% else %}
+                                <span class="badge bg-info">Team Member</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Member Since</label>
+                        <p class="form-control-plaintext">{{ current_user.created_at.strftime('%B %d, %Y') }}</p>
+                    </div>
+                </div>
+                
+                {% if current_user.last_login %}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Last Login</label>
+                        <p class="form-control-plaintext">{{ current_user.last_login.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Stats</h5>
+            </div>
+            <div class="card-body">
+                {% if current_user.is_pi() %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Projects Owned</span>
+                        <span class="badge bg-primary">{{ current_user.owned_projects|length }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Tasks Created</span>
+                        <span class="badge bg-success">{{ current_user.created_tasks|length }}</span>
+                    </div>
+                {% else %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Projects Assigned</span>
+                        <span class="badge bg-primary">{{ current_user.assigned_projects|length }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Tasks Assigned</span>
+                        <span class="badge bg-warning">{{ current_user.assigned_tasks|length }}</span>
+                    </div>
+                {% endif %}
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>Comments Made</span>
+                    <span class="badge bg-info">{{ current_user.task_comments|length }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
