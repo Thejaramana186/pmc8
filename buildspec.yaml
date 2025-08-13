@@ -10,7 +10,7 @@ env:
     github_username: "/theja/github/username"
     github_token: "/theja/github/token"
     git_repo: "/theja/github/repo_url"       # e.g. https://github.com/Thejaramana186/Theja-gitops.git
-    git_path: "/root/Theja-gitops"          # folder where manifests are cloned
+    #git_path: "/root/Theja-gitops"          # folder where manifests are cloned
     deployment_file: "deployment.yaml"       # path to YAML to update
 
 phases:
