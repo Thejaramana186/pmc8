@@ -1,4 +1,5 @@
 version: 0.2
+
 env:
   parameter-store:
     container_registry: "/theja/aws/docker_registry"
@@ -8,6 +9,7 @@ env:
     secret_key: "/theja/aws/secret_key"
     github_username: "/theja/github/username"
     github_token: "/theja/github/token"
+
 phases:
   install:
     run-as: root
@@ -20,6 +22,7 @@ phases:
       - aws configure set aws_secret_access_key $secret_key
       - aws configure set region $aws_region
       - echo "AWS CLI configured"
+
   pre_build:
     run-as: root
     commands:
@@ -28,6 +31,7 @@ phases:
       - echo "ECR login successful"
       - curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
       - echo "Grype installed"
+
   build:
     run-as: root
     commands:
@@ -39,6 +43,7 @@ phases:
       - echo "Docker image pushed: $container_registry/$ecr_repo:$env_image_tag$CODEBUILD_BUILD_NUMBER"
       - grype $container_registry/$ecr_repo:$env_image_tag$CODEBUILD_BUILD_NUMBER --only-fixed
       - echo "Vulnerability scan completed"
+
   post_build:
     run-as: root
     commands:
