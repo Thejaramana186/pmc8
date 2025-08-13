@@ -9,11 +9,11 @@ env:
     secret_key: "/theja/aws/secret_key"
     github_username: "/theja/github/username"
     github_token: "/theja/github/token"
-    build_env: "/theja/build/env"
-    docker_file: "/theja/docker/file"
-    env_image_tag: "/theja/env/image_tag"
-    deployment_file: "/theja/deployment/file"
-    git_path: "/tmp/gitops"
+    git_path: "/tmp/gitops"             # Path inside container where GitOps repo will be cloned
+    deployment_file: "deployment.yaml"  # Name of deployment YAML in GitOps repo
+    build_env: "prod"                   # Example build environment
+    docker_file: "Dockerfile"           # Dockerfile name
+    env_image_tag: "latest"             # Image tag prefix
 
 phases:
   install:
@@ -23,16 +23,16 @@ phases:
       - yum update -y
       - docker --version
       - aws --version
-      - aws configure set aws_access_key_id ${access_key}
-      - aws configure set aws_secret_access_key ${secret_key}
-      - aws configure set region ${aws_region}
+      - aws configure set aws_access_key_id $access_key
+      - aws configure set aws_secret_access_key $secret_key
+      - aws configure set region $aws_region
       - echo "AWS CLI configured"
 
   pre_build:
     run-as: root
     commands:
       - echo "Logging into private ECR..."
-      - aws ecr get-login-password --region ${aws_region} | docker login --username AWS --password-stdin ${container_registry}
+      - aws ecr get-login-password --region $aws_region | docker login --username AWS --password-stdin $container_registry
       - echo "ECR login successful"
       - curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
       - echo "Grype installed"
@@ -41,23 +41,26 @@ phases:
     run-as: root
     commands:
       - echo "Build started on $(date)"
-      - echo "Build number: ${CODEBUILD_BUILD_NUMBER}"
-      - docker build --build-arg BUILD_ENV=${build_env} -f ${docker_file} -t ${container_registry}/${ecr_repo}:${env_image_tag}${CODEBUILD_BUILD_NUMBER} .
+      - echo "Build number: $CODEBUILD_BUILD_NUMBER"
+      - IMAGE_TAG="$container_registry/$ecr_repo:$env_image_tag$CODEBUILD_BUILD_NUMBER"
+      - echo "Building Docker image $IMAGE_TAG..."
+      - docker build --build-arg BUILD_ENV=$build_env -f $docker_file -t $IMAGE_TAG .
       - docker images
-      - docker push ${container_registry}/${ecr_repo}:${env_image_tag}${CODEBUILD_BUILD_NUMBER}
-      - echo "Docker image pushed: ${container_registry}/${ecr_repo}:${env_image_tag}${CODEBUILD_BUILD_NUMBER}"
-      - grype ${container_registry}/${ecr_repo}:${env_image_tag}${CODEBUILD_BUILD_NUMBER} --only-fixed
+      - docker push $IMAGE_TAG
+      - echo "Docker image pushed: $IMAGE_TAG"
+      - grype $IMAGE_TAG --only-fixed
       - echo "Vulnerability scan completed"
 
   post_build:
     run-as: root
     commands:
       - echo "Cloning private GitOps repo..."
-      - git clone -b main https://${github_username}:${github_token}@github.com/Thejaramana186/Theja-gitops.git /tmp/gitops
-      - cd /tmp/gitops
+      - git clone -b main https://$github_username:$github_token@github.com/Thejaramana186/Theja-gitops.git $git_path
+      - cd $git_path
       - echo "Updating deployment YAML with new image tag..."
-      - sed -i "s|${container_registry}/${ecr_repo}:${env_image_tag}$((CODEBUILD_BUILD_NUMBER-1))|${container_registry}/${ecr_repo}:${env_image_tag}${CODEBUILD_BUILD_NUMBER}|g" "${deployment_file}"
-      - git add .
-      - git commit -m "Update deployment YAML with image tag ${env_image_tag}${CODEBUILD_BUILD_NUMBER}"
+      - PREV_TAG="$container_registry/$ecr_repo:$env_image_tag$((CODEBUILD_BUILD_NUMBER-1))"
+      - sed -i "s|$PREV_TAG|$IMAGE_TAG|g" $deployment_file
+      - git add $deployment_file
+      - git commit -m "Update deployment YAML with image tag $IMAGE_TAG" || echo "No changes to commit"
       - git push origin main
       - echo "GitOps repo updated successfully"
