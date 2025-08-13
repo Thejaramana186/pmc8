@@ -1,4 +1,5 @@
 version: 0.2
+
 env:
   parameter-store:
     container_registry: "/theja/aws/docker_registry"
@@ -8,13 +9,12 @@ env:
     secret_key: "/theja/aws/secret_key"
     github_username: "/theja/github/username"
     github_token: "/theja/github/token"
-    deployment_file: "/tmp/gitops/deployment.yaml"  # full path to deployment.yaml after clone
-    git_path: "/tmp/gitops"
+
 phases:
   install:
     run-as: root
     commands:
-      - echo "Installing dependencies and updating Linux packages..."
+      - echo "Updating Linux packages..."
       - yum update -y
       - docker --version
       - aws --version
@@ -22,6 +22,7 @@ phases:
       - aws configure set aws_secret_access_key $secret_key
       - aws configure set region $aws_region
       - echo "AWS CLI configured"
+
   pre_build:
     run-as: root
     commands:
@@ -30,6 +31,7 @@ phases:
       - echo "ECR login successful"
       - curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
       - echo "Grype installed"
+
   build:
     run-as: root
     commands:
@@ -41,16 +43,17 @@ phases:
       - echo "Docker image pushed: $container_registry/$ecr_repo:$env_image_tag$CODEBUILD_BUILD_NUMBER"
       - grype $container_registry/$ecr_repo:$env_image_tag$CODEBUILD_BUILD_NUMBER --only-fixed
       - echo "Vulnerability scan completed"
+
   post_build:
     run-as: root
     commands:
       - echo "Cloning private GitOps repo..."
-      - rm -rf $git_path
-      - git clone -b main https://$github_username:$github_token@github.com/Thejaramana186/Theja-gitops.git $git_path
+      - rm -rf /tmp/gitops
+      - git clone -b main https://$github_username:$github_token@github.com/Thejaramana186/Theja-gitops.git /tmp/gitops
       - echo "Updating deployment YAML with new image tag..."
-      - sed -i "s|$container_registry/$ecr_repo:$env_image_tag$(($CODEBUILD_BUILD_NUMBER-1))|$container_registry/$ecr_repo:$env_image_tag$CODEBUILD_BUILD_NUMBER|g" $deployment_file || true
-      - cd $git_path
-      - git add $deployment_file
+      - sed -i "s|$container_registry/$ecr_repo:$env_image_tag$(($CODEBUILD_BUILD_NUMBER-1))|$container_registry/$ecr_repo:$env_image_tag$CODEBUILD_BUILD_NUMBER|g" /tmp/gitops/deployment.yaml
+      - cd /tmp/gitops
+      - git add deployment.yaml
       - git commit -m "Update deployment YAML with image tag $env_image_tag$CODEBUILD_BUILD_NUMBER" || echo "No changes to commit"
       - git push origin main
       - echo "GitOps repo updated successfully"
