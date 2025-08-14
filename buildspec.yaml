@@ -10,12 +10,8 @@ env:
     github_username: "/theja/github/username"
     github_token: "/theja/github/token"
     git_repo: "/theja/github/repo_url"
-  variables:
-    git_path: "/root/Theja-gitops"       # Local folder to clone manifests into
-    deployment_file: "deployment.yaml"   # Path to your deployment YAML
-    env_image_tag: "v"                   # Prefix for image tag
-    docker_file: "Dockerfile"            # Your Dockerfile name
-    build_env: "dev"                     # Build environment label
+    # git_path: "/root/Theja-gitops"
+    # deployment_file: "deployment.yaml"
 
 phases:
   install:
@@ -58,7 +54,6 @@ phases:
       - echo "Cloning GitHub repository for manifests..."
       - git clone -b main https://$github_username:$github_token@github.com/Thejaramana186/Theja-gitops.git $git_path
       - cd $git_path
-      - echo "Updating deployment YAML with new image tag..."
       - PREV_TAG=$(($CODEBUILD_BUILD_NUMBER-1))
       - sed -i "s|$container_registry/$ecr_repo:${env_image_tag}${PREV_TAG}|$container_registry/$ecr_repo:${env_image_tag}${CODEBUILD_BUILD_NUMBER}|g" $deployment_file
       - git config --global user.email "theja4j5@gmail.com"
