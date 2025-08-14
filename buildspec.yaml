@@ -52,7 +52,7 @@ phases:
     commands:
       - echo "Cloning GitHub repository for manifests..."
       - git clone -b main "https://$github_username:$github_token@github.com/Thejaramana186/Theja-gitops.git" "$git_path"
-      - cd "$git_path"
+      - cd "$git_path/pmc8"
       - >
         echo "Updating deployment YAML with new image tag..." &&
         PREV_TAG=$(($CODEBUILD_BUILD_NUMBER - 1)) &&
