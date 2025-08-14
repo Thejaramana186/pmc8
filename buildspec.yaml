@@ -36,15 +36,15 @@ phases:
   build:
     run-as: root
     commands:
-      - |
-        echo "Build started on $(date)"
-        echo "Build number: $CODEBUILD_BUILD_NUMBER"
-        IMAGE_TAG="$container_registry/$ecr_repo:$env_image_tag$CODEBUILD_BUILD_NUMBER"
-        echo "Building Docker image $IMAGE_TAG..."
-        docker build --build-arg BUILD_ENV="$build_env" -f "$docker_file" -t "$IMAGE_TAG" .
-        docker images
-        docker push "$IMAGE_TAG"
-        grype "$IMAGE_TAG" --only-fixed
+      - >
+        echo "Build started on $(date)" &&
+        echo "Build number: $CODEBUILD_BUILD_NUMBER" &&
+        IMAGE_TAG="$container_registry/$ecr_repo:$env_image_tag$CODEBUILD_BUILD_NUMBER" &&
+        echo "Building Docker image $IMAGE_TAG..." &&
+        docker build --build-arg BUILD_ENV="$build_env" -f "$docker_file" -t "$IMAGE_TAG" . &&
+        docker images &&
+        docker push "$IMAGE_TAG" &&
+        grype "$IMAGE_TAG" --only-fixed &&
         echo "Docker build and vulnerability scan completed"
 
   post_build:
@@ -53,9 +53,9 @@ phases:
       - echo "Cloning GitHub repository for manifests..."
       - git clone -b main "https://$github_username:$github_token@github.com/Thejaramana186/Theja-gitops.git" "$git_path"
       - cd "$git_path"
-      - |
-        echo "Updating deployment YAML with new image tag..."
-        PREV_TAG=$(($CODEBUILD_BUILD_NUMBER - 1))
+      - >
+        echo "Updating deployment YAML with new image tag..." &&
+        PREV_TAG=$(($CODEBUILD_BUILD_NUMBER - 1)) &&
         sed -i "s|$container_registry/$ecr_repo:$env_image_tag$PREV_TAG|$container_registry/$ecr_repo:$env_image_tag$CODEBUILD_BUILD_NUMBER|g" "$deployment_file"
       - git config --global user.email "theja4j5@gmail.com"
       - git config --global user.name "$github_username"
