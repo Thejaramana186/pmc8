@@ -31,22 +31,20 @@ RUN chmod +x startup.sh
 RUN mkdir -p /app/data
 
 # Initialize database tables immediately during build
-RUN python3 -c "
-from app import create_app, db
-from app.models.user import User
-from app.models.project import Project
-from app.models.task import Task
-from app.models.meeting import Meeting
-from app.models.notification import Notification
-
-app = create_app()
-with app.app_context():
-    try:
-        db.create_all()
-        print('✅ Database tables created successfully during build!')
-    except Exception as e:
-        print(f'Database initialization error: {e}')
-"
+RUN python3 -c "from app import create_app, db; \
+from app.models.user import User; \
+from app.models.project import Project; \
+from app.models.task import Task; \
+from app.models.meeting import Meeting; \
+from app.models.notification import Notification; \
+app = create_app(); \
+from sqlalchemy.exc import SQLAlchemyError; \
+with app.app_context(): \
+    try: \
+        db.create_all(); \
+        print('✅ Database tables created successfully during build!'); \
+    except SQLAlchemyError as e: \
+        print(f'Database initialization error: {e}')"
 
 # Expose the port your Flask app runs on
 EXPOSE 5000
